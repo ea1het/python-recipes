@@ -1,0 +1,24 @@
+#
+# EXECUTION
+# ----------
+# uwsgi --ini /opt/api/settings.ini && tail -f /opt/api/run/server.log
+#
+[uwsgi]
+vacuum          = true
+master          = true
+uid             = 33
+gid             = 33
+processes       = 1
+threads         = 2
+max-requests    = 1024
+disable-logging = false
+
+#
+# RESTful-API :: Application related data
+#
+procname        = api
+chdir           = /opt/api
+module          = manage:app
+daemonize       = /opt/api/run/server.log
+pidfile         = /opt/api/run/server.pid
+socket          = /opt/api/run/server.sock
