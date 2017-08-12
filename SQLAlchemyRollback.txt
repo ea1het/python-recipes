@@ -1,0 +1,51 @@
+$ cat db/transaction.py
+import logging
+from sqlalchemy.exc import SQLAlchemyError
+from . import db
+
+
+logger = logging.getLogger(__name__)
+
+
+class Transaction(object):
+    """Simple wrapper to handle database transactions."""
+
+    def __enter__(self):
+        return db
+
+    def __exit__(self, typ, value, traceback):
+        if typ is None:
+            db.session.commit()
+            return True
+
+        if isinstance(typ, SQLAlchemyError):
+            logger.exception('Database transaction error')
+            db.session.rollback()
+            return True
+
+
+
+
+example use:
+
+import os
+from flask import Blueprint, abort, request
+
+from textmode.db.transaction import Transaction
+
+from .models import Pack, PackFile
+
+view = Blueprint('pack', __name__)
+
+@view.route('/download/<name>/<filename>')
+def pack_file_download(name, filename):
+    pack, pack_file = resolve_pack_file(name, filename)
+    if not os.path.isfile(pack_file.path):
+        abort(404)
+
+    # Track downloads
+    if not request.is_internal:
+        with Transaction():
+            pack_file.downloads += 1
+
+    return send_file(pack_file.path)
