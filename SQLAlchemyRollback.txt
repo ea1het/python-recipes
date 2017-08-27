@@ -1,4 +1,5 @@
 $ cat db/transaction.py
+============================
 import logging
 from sqlalchemy.exc import SQLAlchemyError
 from . import db
@@ -26,7 +27,8 @@ class Transaction(object):
 
 
 
-example use:
+Eexample of use:
+==============================
 
 import os
 from flask import Blueprint, abort, request
@@ -49,3 +51,24 @@ def pack_file_download(name, filename):
             pack_file.downloads += 1
 
     return send_file(pack_file.path)
+
+
+
+OR EVEN
+
+
+@view.route('/<name>/')
+def pack(name):
+    pack = Pack.query.filter(
+        Pack.name == name,
+    ).first_or_404()
+
+
+    if not request.is_internal:
+        with Transaction():
+            pack.views += 1
+
+    return render_template(
+        'textmode/pack/pack.html',
+        pack=pack,
+    )
